@@ -14,6 +14,7 @@ patch:
 
   custom_phrase/user_dict: custom_top_phrase
   speller/alphabet/+: '['
+  speller/initials/+: '\'
   editor/bindings/KP_Delete: back_syllable
   recognizer/patterns/add_user_dict: "^``[A-Za-z7890/`';]*$"
 
@@ -51,6 +52,10 @@ patch:
 
   user_dict_set/initial_quality: 0
 
+  paired_symbols/symkey/+:
+    de: "|的"
+    db: "|，"
+    jv: "|。"
 
   speller/algebra:
     __patch:
@@ -59,9 +64,8 @@ patch:
 
   schema/dependencies/@0: 
   engine/translators/@11: 
-  engine/filters/@before 1: lua_filter@*snow.fix
   engine/processors/@before 0: chord_composer
-  engine/processors/@before 1: lua_processor@*snow.combo_popping_wanxiang
+  engine/processors/@before 1: lua_processor@*combo_popping
   engine/processors/@before 2: userdb_cleaner
   engine/processors/@3: 
 
@@ -144,13 +148,14 @@ patch:
       - xform/^([qazwsxedcrfvtgb]+) $/v $1 v/
       - xform/^([yhnujmikolp]+) $/v$1$1v/
       # 左手并击，打出声介（一简字）
-      - xform/^([qazwsxedcrfvtgb]+)$/ $1  /
+      - xform|^f$|\\de |
+      # - xform/^([qazwsxedcrfvtgb]+)$/ $1  /
       # 左手并击右手单引号，打出声介的二选（一简词）
       - xform/^([qazwsxedcrfvtgb]+)'$/ $1 - /
       # 右手并击，打出符号和功能键
       - xform|^h$|/DP |
-      - xform|^j$|/DB |
-      - xform|^k$|/JV |
+      - xform|^j$|\\db |
+      - xform|^k$|\\jv |
       - xform|^l$|/WF |
       - xform|^y$|/HG |
       - xform|^u$|/QYN |
@@ -315,7 +320,7 @@ patch:
       - xform/^(u?[gkhr]j?)(a|ai|an|ang|ao|e|ei|en|eng|ou|i|ia|ian|iang|iao|ie|ien|ieng|iou|u|ua|uai|uan|uang|ue|uei|uen|ueng|v|van|ve|ven|veng)?([wyxq])$/[$1$2$3]/
       - xform/^(u?[zcsr]j?)(a|ai|an|ang|ao|e|ei|en|eng|ou|u|ua|uai|uan|uang|ue|uei|uen|ueng)?([wyxq])$/[$1$2$3]/
       # 单独打声介的情况
-      - xform/^([bpmfdtnlgkhzcsr]j?[iuv]?)$/[$1]/
+      # - xform/^([bpmfdtnlgkhzcsr]j?[iuv]?)$/[$1]/
       # 辅助码的情况
       - xform/^(v.+v)$/[$1]/
       # 去除不合法音节
@@ -323,7 +328,7 @@ patch:
       - xform/^\[(.+)\]/$1/
     prompt_format:
       # 加方括弧
-      - xform/^(?!.*\{Down\})([^,.]*)$/[$1]/
+      - xform|^(?!.*\{Down\})([^,.]*)$|[$1]|
       - xform/j/h/
       - xform/{Page_Up}/前翻/
       - xform/{Page_Down}/后翻/
@@ -398,7 +403,6 @@ patch:
     - xlit/1234/wyxq/
     # 支持声介简拼
     - abbrev/^([bpmfdtnlgkhzcsr]j?[iuv]).+$/$1/
-    # - abbrev/^([bpmfdtnlgkhzcsr]h?[iuv]).+$/$1/
 
 直接辅助:  ########################################位于词库第三个分号后
   __append:

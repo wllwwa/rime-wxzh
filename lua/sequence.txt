@@ -1,6 +1,0 @@
-/db_name	lua/sequence
-/db_type	userdb
-/migration_version	9.1.3
-/rime_version	1.14.0
-/user_id	sync-dict
-lixrjioux	i=里有 p=1 o=0 t=1757080980.175

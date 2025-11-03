@@ -687,4 +687,18 @@ wanxiang.tone_matrix = {
     ["zuo"] = {1,2,3,4},
     ["ḿ"] = {2},
 }
+wanxiang.kNoop = 2
+wanxiang.kAccepted = 1
+-- 添加 snow 中被使用的函数
+--- 取出输入中当前正在翻译的一部分
+---@param context Context
+---@return string|nil
+function wanxiang.current(context)
+  local segment = context.composition:toSegmentation():back()
+  if not segment then
+    return nil
+  end
+  return context.input:sub(segment.start + 1, segment._end)
+end
+
 return wanxiang
