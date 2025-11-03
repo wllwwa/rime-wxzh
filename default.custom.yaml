@@ -1,0 +1,30 @@
+customization:
+  distribution_code_name: Weasel
+  distribution_version: 0.17.4
+  generator: "Rime::SwitcherSettings"
+  modified_time: "Sat Oct 11 19:32:30 2025"
+  rime_version: 1.14.0
+patch:
+  "key_binder/bindings/+":
+    - {accept: "Control+F20", select: .next, when: always}
+  "menu/alternative_select_labels":
+    - "１"
+    - "２"
+    - "３"
+    - "４"
+    - "５"
+    - "６"
+    - "７"
+    - "８"
+    - "９"
+    - "１０"
+    - "１１"
+    - "１２"
+    - "１３"
+    - "１４"
+    - "１５"
+  schema_list:
+    - {schema: wanxiang_pro}
+    - {schema: wanxiang_mixedcode}
+  "switcher/save_options/+":
+    - popping

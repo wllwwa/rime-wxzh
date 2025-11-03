@@ -1,0 +1,458 @@
+patch:
+  schema/name: 万象拼读并
+  schema/+:
+    icon: "pinyin_icons/zh.ico"
+    ascii_icon: "pinyin_icons/en.ico"
+    full_icon: "pinyin_icons/full.ico"
+    half_icon: "pinyin_icons/half.ico"
+
+  switches/@before 2:
+    __patch:
+      - name: popping
+        states: [整句, 顶功]
+      # reset: 1
+
+  custom_phrase/user_dict: custom_top_phrase
+  speller/alphabet/+: '['
+  editor/bindings/KP_Delete: back_syllable
+  recognizer/patterns/add_user_dict: "^``[A-Za-z7890/`';]*$"
+
+  # Tips 配置项
+  tips:
+    # 禁用的 tips 类型，初始化 tips 数据库的时候会直接忽略相关规则，修改部署后生效
+    # 可选项为：偏旁，符号，化学式，时间，符号，组字，翻译，表情，货币，车牌
+    disabled_types: [翻译]
+
+  translator/packs/+:
+    - qingsheng
+    - renming
+
+  # # 取消注释以开启自动无词频造词
+  # add_user_dict/enable_auto_phrase: true
+
+  userdb_cleaner:
+    trigger_input: "/del"
+    cleanup_userdb_list: []
+    full_information_display: false
+
+  # Lua 配置: 超级tips上屏按键
+  key_binder/tips_key: "semicolon"
+  
+  key_binder/bindings/+:
+    #快捷键caplock+u,i,o,p #配合ahk实现光标回退至特定音节后、补充辅助码、快捷自造词的功能
+    - { when: composing, accept: Control+F13, send_sequence: '{Home}{Shift+Right}' }                                        #快捷键caplock+u 回退至第一音节后
+    - { when: composing, accept: Control+F14, send_sequence: '{Home}{Shift+Right}{Shift+Right}' }                           #快捷键caplock+i 回退至第二音节后
+    - { when: composing, accept: Control+F15, send_sequence: '{Home}{Shift+Right}{Shift+Right}{Shift+Right}' }              #快捷键caplock+o 回退至第三音节后
+    - { when: composing, accept: Control+F16, send_sequence: '{Home}{Shift+Right}{Shift+Right}{Shift+Right}{Shift+Right}' } #快捷键caplock+p 回退至第四音节后
+    - { when: composing, accept: Control+F19, send_sequence: '{Home}{grave}{grave}{End}' }                                  #快捷键caplock+q 快捷自造词
+    - { match: "^[a-z]+[A-Z][7890]$", accept: "BackSpace", send_sequence: '{BackSpace}{BackSpace}' }
+    #使用快捷键开启和关闭顶功
+    - { when: always, accept: Control+F18, toggle: popping }
+
+  user_dict_set/initial_quality: 0
+
+
+  speller/algebra:
+    __patch:
+      - 拼读并击     #拼音转拼读并击
+      - 直接辅助     #辅助码部分
+
+  schema/dependencies/@0: 
+  engine/translators/@11: 
+  engine/filters/@before 1: lua_filter@*snow.fix
+  engine/processors/@before 0: chord_composer
+  engine/processors/@before 1: lua_processor@*snow.combo_popping_wanxiang
+  engine/processors/@before 2: userdb_cleaner
+  engine/processors/@3: 
+
+  # editor/bindings/BackSpace: back_syllable
+  # 主翻译器
+  translator/preedit_format/+:
+    # 字母标调
+    - xlit/wyxq/1234/
+    # 隐含的韵母
+    - xform/([zcs]j?|r)(?=\d)/$1i/
+    - xform/([zcs]h?|r)(?=\d)/$1i/
+    - xform/(?<=[bpmf])(?=\d)/u/
+    - xform/rj(?=\d)/rjer/
+    # 声介变换
+    - xform/([zcs])j/$1h/
+    - xform/rji(\d|en\d|eng\d)/rjyi$1/
+    - xform/rji/rjy/
+    - xform/rju(\d)/rjwu$1/
+    - xform/rju/rjw/
+    - xform/rjv/rjyv/
+    - xform/rj//
+    - xform/g(?=[iv])/j/
+    - xform/k(?=[iv])/q/
+    - xform/(?<![zcs])h(?=[iv])/x/
+    # 韵调变换
+    - xform/(?<=[bpmfuw])e(?=\d)/o/
+    - xform/yveng/yong/
+    - xform/veng/iong/
+    - xform/ueng/ong/
+    - xform/ieng/ing/
+    - xform/(?<=[iuv])en/n/
+    - xform/iou/iu/
+    - xform/uei/ui/
+    - xform/([jqxy])v/$1u/
+  # 次翻译器
+  user_dict_set/preedit_format/+:
+    # 字母标调
+    - xlit/wyxq/1234/
+    # 隐含的韵母
+    - xform/([zcs]j?|r)(?=\d)/$1i/
+    - xform/([zcs]h?|r)(?=\d)/$1i/
+    - xform/(?<=[bpmf])(?=\d)/u/
+    - xform/rj(?=\d)/rjer/
+    # 声介变换
+    - xform/([zcs])j/$1h/
+    - xform/rji(\d|en\d|eng\d)/rjyi$1/
+    - xform/rji/rjy/
+    - xform/rju(\d)/rjwu$1/
+    - xform/rju/rjw/
+    - xform/rjv/rjyv/
+    - xform/rj//
+    - xform/g(?=[iv])/j/
+    - xform/k(?=[iv])/q/
+    - xform/(?<![zcs])h(?=[iv])/x/
+    # 韵调变换
+    - xform/(?<=[bpmfuw])e(?=\d)/o/
+    - xform/yveng/yong/
+    - xform/veng/iong/
+    - xform/ueng/ong/
+    - xform/ieng/ing/
+    - xform/(?<=[iuv])en/n/
+    - xform/iou/iu/
+    - xform/uei/ui/
+    - xform/([jqxy])v/$1u/
+
+  # punctuator/use_space: true #空格顶字
+
+#并击处理器
+  chord_composer:
+    finish_chord_on_first_key_release: true #有一键被释放时立刻触发合成
+    alphabet: "qazwsxedcrfvtgbyhnujmik,ol.p;/' ["
+    algebra:
+      # 双手并击，打出音节
+      - xform|^([qazwsxedcrfvtgb]+)([p;/ol.ik,ujmyhn]+)$| $1  $2 |
+      # 双手带空格并击，打出追加音节，这里 u 表示追加
+      - xform|^([qazwsxedcrfvtgb]+)([p;/ol.ik,ujmyhn]+) $|u $1  $2 |
+      - xform|^([qazwsxedcrfvtgb])([p;/ol.ik,ujmyhn])(['])$|$1 $2|
+      # - xform|^([qazwsxedcrfvtgb]+)([p;/ol.ik,ujmyhn]+) $| $1  $2  |
+      # 左手或右手带空格并击，打出辅助码
+      - xform/^([qazwsxedcrfvtgb]+) $/v $1 v/
+      - xform/^([yhnujmikolp]+) $/v$1$1v/
+      # 左手并击，打出声介（一简字）
+      - xform/^([qazwsxedcrfvtgb]+)$/ $1  /
+      # 左手并击右手单引号，打出声介的二选（一简词）
+      - xform/^([qazwsxedcrfvtgb]+)'$/ $1 - /
+      # 右手并击，打出符号和功能键
+      - xform|^h$|/DP |
+      - xform|^j$|/DB |
+      - xform|^k$|/JV |
+      - xform|^l$|/WF |
+      - xform|^y$|/HG |
+      - xform|^u$|/QYN |
+      - xform|^i$|/HYN |
+      - xform|^o$|/TAN |
+      - xform|^p$|/FF |
+      - xform|^n$|/UG |
+      - xform|^m$|/MK |
+      - xform|^ui$|/QKO |
+      - xform|^io$|/HKO |
+      - xform|^uo$|/QUU |
+      - xform|^up$|/HUU |
+      - xform|^m\.$|/QYn |
+      - xform|^m\/$|/HYn |
+      - xform/^jk$/- /
+      - xform/^kl$/-- /
+      - xform/^jl$/--- /
+      - xform/^j;$/---- /
+      - xform/-/{Down}/
+      - xform/^hk$/{Page_Up}/
+      - xform/^hl$/{Page_Down}/
+      - xform/^op$/{KP_Delete}/
+      - xform|^mk$|/rq|
+      - xform|^h;$|/rtj|
+      - xform|^uk$|\\k|
+      - xform|^yk$|\\w|
+      - xform|^yu$|\\zs|
+      - xform|^nl$|/del|
+      # 右手带空格，打出辅助码
+      - xform/v([yhnujmikolp])\1v/\U$1/
+      # 左手带空格，打出辅助码
+      - xform/v ([qazwsxedcrfvtgb]) v/\U$1/
+      # 双手并击，打出辅助码
+      # - xform/([azsxdcfvgb]) j/\U\17/
+      # - xform/([azsxdcfvgb]) k/\U\18/
+      # - xform/([azsxdcfvgb]) l/\U\19/
+      # - xform/([azsxdcfvgb]) ;/\U\10/
+      # - xform/([qwert]) u/\U\17/
+      # - xform/([qwert]) i/\U\18/
+      # - xform/([qwert]) o/\U\19/
+      # - xform/([qwert]) p/\U\10/
+      # - xform/q ([hnjmkl])/\U\17/
+      # - xform/w ([hnjmkl])/\U\18/
+      # - xform/e ([hnjmkl])/\U\19/
+      # - xform/r ([hnjmkl])/\U\10/
+      # - xform/a ([yuiop])/\U\17/
+      # - xform/s ([yuiop])/\U\18/
+      # - xform/d ([yuiop])/\U\19/
+      # - xform/f ([yuiop])/\U\10/
+      - xform/ ([qazwsxedcrfvtgb])  op /\U\17/
+      - xform/ ([qazwsxedcrfvtgb])  o; /\U\18/
+      - xform/ qw  ([polikujmyhn]) /\U\17/
+      - xform/ aw  ([polikujmyhn]) /\U\18/
+      - xform/ ([qazwsxedcrfvtgb])  nj /\U$1/
+      - xform/ fv  ([polikujmyhn]) /\U$1/
+      # 左手声介
+      - xform/ zv /rj/
+      - xform/ d /rji/
+      - xform/ e /rju/
+      - xform/ sd /rjv/
+      - xform/ w /b/
+      - xform/ sg /bi/
+      - xform/ eg /p/
+      - xform/ xg /pi/
+      - xform/ c /m/
+      - xform/ qf /mi/
+      - xform/ t /f/
+      - xform/ f /d/
+      - xform/ xc /di/
+      - xform/ cv /du/
+      - xform/ af /t/
+      - xform/ wf /ti/
+      - xform/ zf /tu/
+      - xform/ dg /n/
+      - xform/ cf /ni/
+      - xform/ se /nu/
+      - xform/ xd /nv/
+      - xform/ b /l/
+      - xform/ x /li/
+      - xform/ wg /lu/
+      - xform/ as /lv/
+      - xform/ sf /g/
+      - xform/ v /gu/
+      - xform/ xv /k/
+      - xform/ cg /ku/
+      - xform/ z /h/
+      - xform/ er /hu/
+      - xform/ a /gi/
+      - xform/ sr /gv/
+      - xform/ df /ki/
+      - xform/ sv /kv/
+      - xform/ r /hi/
+      - xform/ dr /hv/
+      - xform/ g /zj/
+      - xform/ we /zju/
+      - xform/ qr /cj/
+      - xform/ dv /cju/
+      - xform/ s /sj/
+      - xform/ ag /sju/
+      - xform/ wr /r/
+      - xform/ qg /ru/
+      - xform/ q /z/
+      - xform/ ef /zu/
+      - xform/ xf /c/
+      - xform/ zg /cu/
+      - xform/ av /s/
+      - xform/ ar /su/
+      # 右手韵调
+      - xform/ ; /1/
+      - xform/ u /2/
+      - xform/ l /3/
+      - xform/ j /4/
+      - xform/ n /a1/
+      - xform/ ul /a2/
+      - xform/ mk /a3/
+      - xform/ io /a4/
+      - xform/ ho /ai1/
+      - xform/ hl /ai2/
+      - xform/ hi /ai3/
+      - xform/ j; /ai4/
+      - xform/ ui /an1/
+      - xform| / |an2|
+      - xform/ m, /an3/
+      - xform/ o /an4/
+      - xform/ ,\. /ang1/
+      - xform/ ji /ang2/
+      - xform/ jo /ang3/
+      - xform/ uo /ang4/
+      - xform/ j\. /ao1/
+      - xform/ u; /ao2/
+      - xform| m/ |ao3|
+      - xform/ kl /ao4/
+      - xform/ k /e1/
+      - xform/ p /e2/
+      - xform/ m /e3/
+      - xform/ h /e4/
+      - xform/ uk /ei1/
+      - xform/ m; /ei2/
+      - xform/ j, /ei3/
+      - xform/ \. /ei4/
+      - xform/ , /en1/
+      - xform/ jl /en2/
+      - xform/ jp /en3/
+      - xform/ hk /en4/
+      - xform/ i /eng1/
+      - xform/ y /eng2/
+      - xform/ h; /eng3/
+      - xform/ jk /eng4/
+      - xform| j/ |ou1|
+      - xform/ ml /ou2/
+      - xform/ up /ou3/
+      - xform/ m\. /ou4/
+      - xlit/1234/wyxq/
+    output_format:
+      # 首先去除无效的并击组合
+      - erase/^.* .+ .*$/
+      # 针对所有可能的音节加上中括号
+      - xform/^(u?[bpm])(a|ai|an|ang|ao|e|ei|en|eng|ou|i|ia|ian|iang|iao|ie|ien|ieng|iou)?([wyxq])$/[$1$2$3]/
+      - xform/^(u?f)(a|an|ang|e|ei|en|eng|ou)?([wyxq])$/[$1$2$3]/
+      - xform/^(u?[dtnl])(a|ai|an|ang|ao|e|ei|en|eng|ou|i|ia|ian|iang|iao|ie|ien|ieng|iou|u|ua|uai|uan|uang|ue|uei|uen|ueng)?([wyxq])$/[$1$2$3]/
+      - xform/^(u?[nl])(v|ve)([wyxq])$/[$1$2$3]/
+      - xform/^(u?[gkhr]j?)(a|ai|an|ang|ao|e|ei|en|eng|ou|i|ia|ian|iang|iao|ie|ien|ieng|iou|u|ua|uai|uan|uang|ue|uei|uen|ueng|v|van|ve|ven|veng)?([wyxq])$/[$1$2$3]/
+      - xform/^(u?[zcsr]j?)(a|ai|an|ang|ao|e|ei|en|eng|ou|u|ua|uai|uan|uang|ue|uei|uen|ueng)?([wyxq])$/[$1$2$3]/
+      # 单独打声介的情况
+      - xform/^([bpmfdtnlgkhzcsr]j?[iuv]?)$/[$1]/
+      # 辅助码的情况
+      - xform/^(v.+v)$/[$1]/
+      # 去除不合法音节
+      - erase/^[a-z]+$/
+      - xform/^\[(.+)\]/$1/
+    prompt_format:
+      # 加方括弧
+      - xform/^(?!.*\{Down\})([^,.]*)$/[$1]/
+      - xform/j/h/
+      - xform/{Page_Up}/前翻/
+      - xform/{Page_Down}/后翻/
+      - xform/{Down}//
+      - xform/{KP_Delete}/删除/
+      - xlit/wyxq/1234/
+
+
+拼读并击: 
+  __append: 
+    - xform/^([a-z]+)(;.*)$/$1①$2/
+    - xform/^(.*)ā(.*)(;.*)$/$1a$2①$3/
+    - xform/^(.*)á(.*)(;.*)$/$1a$2②$3/
+    - xform/^(.*)ǎ(.*)(;.*)$/$1a$2③$3/
+    - xform/^(.*)à(.*)(;.*)$/$1a$2④$3/
+    - xform/^ō(;.*)$/ou$2①$3/
+    - xform/^ó(;.*)$/ou$2②$3/
+    - xform/^ǒ(;.*)$/ou$2③$3/
+    - xform/^ò(;.*)$/ou$2④$3/
+    - xform/^(.*)ō(.*)(;.*)$/$1o$2①$3/
+    - xform/^(.*)ó(.*)(;.*)$/$1o$2②$3/
+    - xform/^(.*)ǒ(.*)(;.*)$/$1o$2③$3/
+    - xform/^(.*)ò(.*)(;.*)$/$1o$2④$3/
+    - xform/^(.*)ē(.*)(;.*)$/$1e$2①$3/
+    - xform/^(.*)é(.*)(;.*)$/$1e$2②$3/
+    - xform/^(.*)ě(.*)(;.*)$/$1e$2③$3/
+    - xform/^(.*)è(.*)(;.*)$/$1e$2④$3/
+    - xform/^(.*)ī(.*)(;.*)$/$1i$2①$3/
+    - xform/^(.*)í(.*)(;.*)$/$1i$2②$3/
+    - xform/^(.*)ǐ(.*)(;.*)$/$1i$2③$3/
+    - xform/^(.*)ì(.*)(;.*)$/$1i$2④$3/
+    - xform/^(.*)ū(.*)(;.*)$/$1u$2①$3/
+    - xform/^(.*)ú(.*)(;.*)$/$1u$2②$3/
+    - xform/^(.*)ǔ(.*)(;.*)$/$1u$2③$3/
+    - xform/^(.*)ù(.*)(;.*)$/$1u$2④$3/
+    - xform/^(.*)ǖ(.*)(;.*)$/$1v$2①$3/
+    - xform/^(.*)ǘ(.*)(;.*)$/$1v$2②$3/
+    - xform/^(.*)ǚ(.*)(;.*)$/$1v$2③$3/
+    - xform/^(.*)ǜ(.*)(;.*)$/$1v$2④$3/
+    - xform/^(.*)ü(.*)$/$1v$2/
+    - xform/^(.*)ń(.*)(;.*)$/$1en$2②$3/
+    - xform/^(.*)ň(.*)(;.*)$/$1en$2③$3/
+    - xform/^(.*)ǹ(.*)(;.*)$/$1en$2④$3/
+    - xlit/①②③④/1234
+    - xform/(;\w+)/\U$1/ # 辅助码改大写
+    - derive/^ng(\d)(;.*)$/eng$1$2/
+    - xform/^n(\d)(;.*)/en$1$2/
+    - xform/^m(?=\d)/mu/
+    - xform/^hm(?=\d)/hen/
+    - xform/^([yl]?)o(?=\d)/$1e/
+    # 韵调变换
+    - xform/(?<=[jqxy])u/$1v/
+    - xform/ui/uei/
+    - xform/iu/iou/
+    - xform/(?<=[iuv])n/en/
+    - xform/ing/ieng/
+    - xform/(?<![iy])ong/ueng/
+    - xform/(iong|(?<=y)ong)/veng/
+    - xform/(?<=[bpmfuw])o(?=\d)/e/
+    # 声介变换
+    - xlit/jqx/gkh/
+    - xform/^(?=[aoeyw])/rj/
+    - xform/^rjyv/rjv/
+    - xform/^rjyi?/rji/
+    - xform/^rjwu?/rju/
+    - xform/^([zcs])h/$1j/
+    # 隐含的韵母
+    - xform/er//
+    - xform/(?<=[bpmf])u//
+    - xform/^([zcs]j?|r)i/$1/
+    # 字母标调
+    - xlit/1234/wyxq/
+    # 支持声介简拼
+    - abbrev/^([bpmfdtnlgkhzcsr]j?[iuv]).+$/$1/
+    # - abbrev/^([bpmfdtnlgkhzcsr]h?[iuv]).+$/$1/
+
+直接辅助:  ########################################位于词库第三个分号后
+  __append:
+#以下是双拼运算
+    - derive/^(.*?)(\d?);.*$/$1/ # 纯双拼的情况
+#分号后面第一组辅助码
+    - derive/^(.*?)(\d?);.*$/$1$2/        # 双拼+声调的情况
+    - derive/^(.*?)(\d?);(\w)([7890]?)(\w).*$/$1$3/        # 双拼+1位辅助码的情况
+    - derive/^(.*?)(\d?);(\w)([7890]?)(\w).*$/$1$3$4/        # 双拼+1位辅助码+7890的情况
+    # - derive/^(.*?)(\d?);(\w)(\w).*$/$1$4/        # 双拼+一位辅助码的情况(反)
+    # - derive|^(.*?)(\d?);(\w)(\w).*$|$1$2$3|  # 双拼+声调+1位辅助码
+    # - derive|^(.*?)(\d?);(\w)(\w).*$|$1$3$2|  # 双拼+1位辅助码+声调
+    - derive/^(.*?)(\d?);(\w)([7890]?)(\w).*$/$1$3$5/  # 双拼+2位辅助码的情况
+    - abbrev/^(.*?)(\d?);(\w)([7890]?)(\w).*$/$1$3$4$5/  # 双拼+辅助码+7890+辅助码的情况
+    # - derive/^(.*?)(\d?);(\w)(\w).*$/$1$4$3/  # 双拼+2位辅助码的情况(反)
+#     - derive|^(.*?)(\d?);(\w)(\w).*$|$1$3$4$2| # 双拼+字母 字母 数字
+#     - derive|^(.*?)(\d?);(\w)(\w).*$|$1$2$3$4|  # 双拼+数字 字母 字母
+#     - derive|^(.*?)(\d?);(\w)(\w).*$|$1$3$2$4|  # 双拼+字母 数字 字母
+#     - derive|^(.*?)(\d?);(\w)(\w).*$|$1$3$4/| # 双拼+2位辅助码+/
+#     - derive|^(.*?)(\d?);(\w)(\w).*$|$1$3$4o| # 双拼\+2位辅助码\+o，主要用来应对小企鹅这类输入法没法使用符号的场景，但同时有些辅助码会出现异常，如：ui uio>uiuio，手机小企鹅使用时开启
+# #分号后面第二组辅助码
+#     - derive/^(.*?)(\d?);.*?,(\w).*$/$1$3/        # 双拼+一位辅助码的情况
+#     - derive|^(.*?)(\d?);.*?,(\w).*$|$1$2$3|  # 双拼+声调+1位辅助码
+#     - derive|^(.*?)(\d?);.*?,(\w).*$|$1$3$2|  # 双拼+1位辅助码+声调
+#     - abbrev/^(.*?)(\d?);.*?,(\w)(\w).*$/$1$3$4/  # 双拼+2位辅助码的情况
+#     - derive|^(.*?)(\d?);.*?,(\w)(\w).*$|$1$3$4$2| # 双拼+字母 字母 数字
+#     - derive|^(.*?)(\d?);.*?,(\w)(\w).*$|$1$2$3$4|  # 双拼+数字 字母 字母
+#     - derive|^(.*?)(\d?);.*?,(\w)(\w).*$|$1$3$2$4|  # 双拼+字母 数字 字母
+#     - derive|^(.*?)(\d?);.*?,(\w)(\w).*$|$1$3$4/| # 双拼+2位辅助码+/
+#     - derive|^(.*?)(\d?);.*?,(\w)(\w).*$|$1$3$4o| # 双拼\+2位辅助码\+o，主要用来应对小企鹅这类输入法没法使用符号的场景，但同时有些辅助码会出现异常，如：ui uio>uiuio，手机小企鹅使用时开启
+# #分号后面第三组辅助码
+#     - derive/^(.*?)(\d?);.*?,.*?,(\w).*$/$1$3/        # 双拼+一位辅助码的情况
+#     - derive|^(.*?)(\d?);.*?,.*?,(\w).*$|$1$2$3|  # 双拼+声调+1位辅助码
+#     - derive|^(.*?)(\d?);.*?,.*?,(\w).*$|$1$3$2|  # 双拼+1位辅助码+声调
+#     - abbrev/^(.*?)(\d?);.*?,.*?,(\w)(\w).*$/$1$3$4/  # 双拼+2位辅助码的情况
+#     - derive|^(.*?)(\d?);.*?,.*?,(\w)(\w).*$|$1$3$4$2| # 双拼+字母 字母 数字
+#     - derive|^(.*?)(\d?);.*?,.*?,(\w)(\w).*$|$1$2$3$4|  # 双拼+数字 字母 字母
+#     - derive|^(.*?)(\d?);.*?,.*?,(\w)(\w).*$|$1$3$2$4|  # 双拼+字母 数字 字母
+#     - derive|^(.*?)(\d?);.*?,.*?,(\w)(\w).*$|$1$3$4/| # 双拼+2位辅助码+/
+#     - derive|^(.*?)(\d?);.*?,.*?,(\w)(\w).*$|$1$3$4o| # 双拼\+2位辅助码\+o，主要用来应对小企鹅这类输入法没法使用符号的场景，但同时有些辅助码会出现异常，如：ui uio>uiuio，手机小企鹅使用时开启
+# #分号后面第四组辅助码
+#     - derive/^(.*?)(\d?);.*?,.*?,.*?,(\w).*$/$1$3/        # 双拼+一位辅助码的情况
+#     - derive|^(.*?)(\d?);.*?,.*?,.*?,(\w).*$|$1$2$3|  # 双拼+声调+1位辅助码
+#     - derive|^(.*?)(\d?);.*?,.*?,.*?,(\w).*$|$1$3$2|  # 双拼+1位辅助码+声调
+#     - abbrev/^(.*?)(\d?);.*?,.*?,.*?,(\w)(\w).*$/$1$3$4/  # 双拼+2位辅助码的情况
+#     - derive|^(.*?)(\d?);.*?,.*?,.*?,(\w)(\w).*$|$1$3$4$2| # 双拼+字母 字母 数字
+#     - derive|^(.*?)(\d?);.*?,.*?,.*?,(\w)(\w).*$|$1$2$3$4|  # 双拼+数字 字母 字母
+#     - derive|^(.*?)(\d?);.*?,.*?,.*?,(\w)(\w).*$|$1$3$2$4|  # 双拼+字母 数字 字母
+#     - derive|^(.*?)(\d?);.*?,.*?,.*?,(\w)(\w).*$|$1$3$4/| # 双拼+2位辅助码+/
+#     - derive|^(.*?)(\d?);.*?,.*?,.*?,(\w)(\w).*$|$1$3$4o| # 双拼\+2位辅助码\+o，主要用来应对小企鹅这类输入法没法使用符号的场景，但同时有些辅助码会出现异常，如：ui uio>uiuio，手机小企鹅使用时开启
+# #特殊优化：部分音节字极少，几乎不参与构词，则提升对应四码字的优先级，仅对自然码双拼有效，其他双拼方案需作对应修改）
+# #    - derive/^(.*?)(\d?);(bd|dw|df|dw|yl|rw|fs|iw)$/$1$3/
+# #    - derive/^(.*?)(\d?);.*?,(bd|dw|df|dw|yl|rw|fs|iw)$/$1$3/
+# #    - derive/^(.*?)(\d?);.*?,.*?,(bd|dw|df|dw|yl|rw|fs|iw)$/$1$3/
+# #    - derive/^(.*?)(\d?);.*?,.*?,.*?,(bd|dw|df|dw|yl|rw|fs|iw)$/$1$3/
+# #    - erase/^(.+);(.+)$/    # 删除原始编码加速检索
+#     - xform/◯/;/  #对于微软双拼、搜狗双拼，前面将分号保护了起来，现在放出来让其发挥作用
