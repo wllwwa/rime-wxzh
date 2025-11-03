@@ -458,23 +458,30 @@ function M.func(input, env)
         
         -- 尝试从输入码中解析 prefix\suffix
         local pos = tail_text:find(symbol, 1, true)
-        if not (pos and pos > 1) then return false end
+        if not pos then return false end
         
         local left  = sub(tail_text, 1, pos - 1)
         local right = sub(tail_text, pos + 1)
-        if not (left and #left > 0) then return false end
-
+        
         local start_pos = (last_seg and last_seg.start) or 0
         local end_pos_full = (last_seg and last_seg._end) or #code
-        
-        -- 使用输入码作为基础文本
-        local base_text = left
         
         -- 检查是否有匹配的包裹键
         local key = (right or ""):lower()
         if key ~= "" and env.wrap_map[key] then
-            -- 创建基础候选并包裹
-            local base_cand = Candidate("completion", start_pos, end_pos_full, base_text, "")
+            -- 情况1: 单独使用符号 (如 \a)
+            if left == "" then
+                local pair = env.wrap_map[key]
+                local pr = env.wrap_parts[key] or { l = "", r = "" }
+                local wrapped = (pr.l or "") .. (pr.r or "")  -- 直接输出成对符号
+                
+                local nc = Candidate("completion", start_pos, end_pos_full, wrapped, "")
+                yield(nc)
+                return true
+            end
+            
+            -- 情况2: 有文本进行包裹 (如 hello\q)
+            local base_cand = Candidate("completion", start_pos, end_pos_full, left, "")
             local nc, base_text, wrapped_text = wrap_from_base(base_cand, key)
             if nc then
                 yield(nc)
@@ -485,7 +492,7 @@ function M.func(input, env)
         -- 没有匹配的包裹键，只显示基础文本
         local keep_tail = 1 + #(right or "")
         local end_pos_show = math.max(start_pos, end_pos_full - keep_tail)
-        local nc = Candidate("completion", start_pos, end_pos_show, base_text, "")
+        local nc = Candidate("completion", start_pos, end_pos_show, left, "")
         yield(nc)
         return true
     end
