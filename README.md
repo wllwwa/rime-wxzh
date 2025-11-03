@@ -1,0 +1,2 @@
+# rime-wxzh
+rime config
